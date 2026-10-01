@@ -68,12 +68,43 @@ class MicroJev(nn.Module):
                         emb.weight[M[n]] = v + torch.randn_like(v) * 0.02 * std
         return M
 
+    # ---------------------------------------------------------------- marker learning rate
+
+    def add_marker_delta(self, M: dict[str, int]) -> nn.Parameter:
+        """Trainable offset for the marker rows of the token embedding (§4.5: markers train at
+        the head's learning rate, the rest of the embedding at the backbone's). Added through a
+        forward hook, so the encoder's state dict is unchanged; `save` folds it in."""
+        emb = self.enc.get_input_embeddings()
+        ids = sorted(set(M.values()))
+        slot = torch.full((emb.num_embeddings,), len(ids), dtype=torch.long)
+        slot[ids] = torch.arange(len(ids))
+        self.register_buffer("marker_slot", slot.to(emb.weight.device), persistent=False)
+        self.marker_ids = ids
+        self.marker_delta = nn.Parameter(torch.zeros(len(ids), emb.embedding_dim,
+                                                     device=emb.weight.device))
+
+        def hook(_module, inputs, out):
+            table = torch.cat([self.marker_delta, self.marker_delta.new_zeros(1, out.shape[-1])])
+            return out + table[self.marker_slot[inputs[0]]].to(out.dtype)
+
+        self._delta_hook = emb.register_forward_hook(hook)
+        return self.marker_delta
+
+    def folded_state_dict(self) -> dict:
+        sd = self.enc.state_dict()
+        if getattr(self, "marker_delta", None) is not None:
+            key = "embeddings.tok_embeddings.weight"
+            w = sd[key].clone()
+            w[self.marker_ids] += self.marker_delta.detach().to(w.dtype)
+            sd[key] = w
+        return sd
+
     # ---------------------------------------------------------------- save / load
 
     def save(self, out: str | Path, tok, extra: dict | None = None) -> None:
         out = Path(out)
         out.mkdir(parents=True, exist_ok=True)
-        self.enc.save_pretrained(out)
+        self.enc.save_pretrained(out, state_dict=self.folded_state_dict())
         tok.save_pretrained(out)
         torch.save(self.head.state_dict(), out / HEAD_NAME)
         (out / CONFIG_NAME).write_text(json.dumps({"model": self.cfg, **(extra or {})}, indent=2),

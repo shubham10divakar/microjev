@@ -11,7 +11,12 @@ Aims: [`00_aims.md`](00_aims.md). Running log: [`notes.md`](notes.md).
 - **Seed 0 trained** (`runs/micro-a-s0b`, bilinear head): test 0.796 / 0.805 / 0.768, held-out
   0.618 / 0.720 / 0.640 (rel / suff / grd); below Nano in-domain, better held-out sufficient and
   calibration. First epoch lost to a plateau. Details: `notes.md` 2026-10-02.
-- **Running:** B-pair (`runs/b-pair`). Then: fix the plateau, seeds 1–2.
+- **B-pair stopped** at epoch 1 step ~1,800 (2026-10-01 18:00, user's call; nothing saved).
+  Re-run overnight, GPU otherwise idle (~5.3 h for 3 epochs at ~0.63 s/step), from `microjev/`:
+  `HF_HUB_DISABLE_SYMLINKS_WARNING=1 PYTHONIOENCODING=utf-8 ../.venv/Scripts/python.exe -u ../nano_jev/scripts/train.py --data data/nano --base answerdotai/ModernBERT-base --out runs/b-pair --epochs 3 --lr 5e-5 --max-length 512 --batch-size 8 > logs/b_pair.log 2>&1`
+  then `python scripts/baselines.py nano --data data --nano runs/b-pair --name b-pair-test` and
+  the held-out variant (`--data data_heldout --calib-data data --name b-pair-heldout`).
+  Then: fix the plateau, seeds 1–2.
 - **Going public + paper:** `02_release_and_paper_plan.md` (release ladder R0/R1/R2, paper
   claims → tables, decisions D1–D5 waiting for the user).
 - **Read first:** `notes.md` and `00_aims.md` (Must / Target / kill criteria).

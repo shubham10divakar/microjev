@@ -2,6 +2,7 @@ import torch
 from conftest import sample_example, tiny_model
 
 from jevcore.backbones.modernbert import MicroJev
+from jevcore.heads import INIT_STD
 from jevcore.packing import PackConfig
 from jevcore.scoring import score_packs
 from jevcore.trainer import TrainConfig, param_groups, train
@@ -34,8 +35,8 @@ def test_param_groups_split():
 
 def test_overfit_and_reload(tmp_path):
     model, tok, M = tiny_model()
-    # back to the real zero-init last layer: training must start at uniform (NLL = log K)
-    torch.nn.init.zeros_(model.head.mlp[-1].weight)
+    # back to the real small-init last layer: training must start near uniform (NLL ~ log K)
+    torch.nn.init.normal_(model.head.mlp[-1].weight, std=INIT_STD)
     torch.nn.init.zeros_(model.head.mlp[-1].bias)
     cfg = PackConfig(max_len=512, half_window=model.half_window)
     packs = _packs()
@@ -45,7 +46,7 @@ def test_overfit_and_reload(tmp_path):
     hist = train(model, tok, M, packs, packs, cfg, tc, tmp_path / "run", "cpu", aug=None,
                  log=lambda *_: None)
     first, last = hist["dev"][0]["macro"], hist["dev"][-1]["macro"]
-    assert abs(hist["dev"][0]["sufficient"] - torch.log(torch.tensor(2.0))) < 1e-4
+    assert abs(hist["dev"][0]["sufficient"] - torch.log(torch.tensor(2.0))) < 0.05
     assert last < 0.1 < first, (first, last)
     assert torch.any(model.marker_delta != 0)                 # markers trained via the delta
 

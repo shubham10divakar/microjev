@@ -117,6 +117,7 @@ def train(model, tok, M, train_packs: list[dict], dev_packs: list[dict], cfg: Pa
         model.train()
         acc_packs, running, n_run = 0, 0.0, 0
         parts_run: dict[str, float] = {}
+        parts_n: dict[str, int] = {}
         for b in epoch_batches(train_packs, tok, M, cfg, rng, tc.tokens_per_microbatch,
                                augment_fn, row_packing=row_packing, with_spans=with_spans):
             n_packs = len(set(b["g_example"]))
@@ -130,6 +131,7 @@ def train(model, tok, M, train_packs: list[dict], dev_packs: list[dict], cfg: Pa
             n_run += 1
             for k, v in parts.items():
                 parts_run[k] = parts_run.get(k, 0.0) + v
+                parts_n[k] = parts_n.get(k, 0) + 1
             if acc_packs < tc.packs_per_step:
                 continue
             torch.nn.utils.clip_grad_norm_(model.parameters(), tc.clip)
@@ -139,10 +141,10 @@ def train(model, tok, M, train_packs: list[dict], dev_packs: list[dict], cfg: Pa
             acc_packs, step = 0, step + 1
             if step % tc.log_every == 0:
                 emit({"event": "step", "epoch": epoch + 1, "step": step, "loss": running / n_run,
-                      "per_decision": {k: v / n_run for k, v in parts_run.items()},
+                      "per_decision": {k: v / parts_n[k] for k, v in parts_run.items()},
                       "lr": sched.get_last_lr()[0], "elapsed_s": round(time.time() - t0)})
                 history["train_loss"].append(running / n_run)
-                running, n_run, parts_run = 0.0, 0, {}
+                running, n_run, parts_run, parts_n = 0.0, 0, {}, {}
             if tc.max_steps and step >= tc.max_steps:
                 break
         if acc_packs:        # flush the last partial accumulation

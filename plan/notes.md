@@ -2,6 +2,54 @@
 
 Newest first. Decisions, deviations from the design doc, and things to check later.
 
+## 2026-10-01 (evening) — seed 0 did not learn; debugging the head
+
+**Symptom.** Phase-A seed 0, epoch 1 (446 steps): dev NLL 0.692 / 0.696 / 1.059 (grd / suff /
+rel) = chance. Stopped the run. The checkpoint outputs almost the same probabilities for every
+pack (MNLI spread 0.036): it learned the label priors only.
+
+**Red herring.** The logged per-decision train losses (grounded 0.15) were wrong: each name's
+sum was divided by *all* micro-batches, including ones without that decision. Fixed
+(`parts_n` in `trainer.py`). Also: steps/epoch was 446 not 810 because a 16k-token
+micro-batch holds ~58 short packs (> `packs_per_step`); the LR schedule length is off. Open.
+
+**Ruled out** (MNLI-only debug set, 4k train / 300 dev, 2 epochs, `data_dbg/`):
+- labels after option shuffling: 0 / 200 mismatches; outputs exactly order-invariant (3e-6);
+- grad checkpointing, bf16 vs fp32, lr_backbone 2e-5 / 1e-4, lr_head 2e-3, mean readout (A4):
+  all stay at ln 2;
+- environment: plain `ModernBertForSequenceClassification` on the same pairs learns fast
+  (dev 0.32 after epoch 1 with mean pooling, 0.44 with CLS pooling);
+- readout indices: anchor = `<q>`, options = `<opt>`, bookkeeping matches §3.6.
+
+**Found** (minimal loop, same data, our model):
+
+| mask | head | dev NLL ep 1 → ep 2 |
+|---|---|---|
+| full (A1) | pair | 0.685 → 0.565 |
+| full (A1) | linear (A5) | 0.628 → **0.460** |
+| block | pair | 0.694 → 0.693 (nothing) |
+| block | pair + input LayerNorm | 0.693 → 0.693 |
+| block | linear (A5) | 0.699 → **0.577** |
+
+1. **The pair head is the blocker.** With the isolation mask it learns nothing in 2 epochs; a
+   linear head on the option token learns. Two hidden dims (67, 251) of ModernBERT's last layer
+   are ~50× the median magnitude and dominate `wa`/`wo`; input LayerNorm alone did not fix it.
+2. **Isolation slows learning** (block 0.577 vs full 0.460 with the same linear head): state
+   tokens never see the claim, so NLI happens only in the decision tokens. Expected from the
+   design, and an honest paper point (H3 is about consistency, but there is a learning-speed
+   cost too).
+3. The last head layer is now small-random instead of zero (a zero last layer passes zero
+   gradient below it), and the pair head got input LayerNorms **plus a direct linear path on
+   the option token** (`z = lin(LN(o)) + MLP(...)`), so global decisions learn like the linear
+   head while `<ref>` decisions keep the anchor term. Offline tests pass. **Not yet verified on
+   GPU**: the mixed MNLI + Hotpot check (`data_dbg2/`) was cut short when other GPU jobs
+   (not Micro-Jev) started at 15:45.
+
+**Next (when the GPU is free):** `train.py --data data_dbg2 --epochs 3` → per-decision dev
+NLL must drop clearly below chance for all three decisions (relevance via `<ref>` too). If
+relevance still sits at its prior, try `ref_view=all` (A6) and a linear term on the `<ref>`
+anchor. Then restart seed 0.
+
 ## 2026-10-01 — M1 data, Nano re-scored, M2 overfit, seed 0 started
 
 - **M1 data** (`prepare_packed.py`, log in `logs/m1_prepare.log`): train 25,920 packs

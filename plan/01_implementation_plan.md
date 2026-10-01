@@ -7,7 +7,10 @@ Aims: [`00_aims.md`](00_aims.md). Running log: [`notes.md`](notes.md).
 
 - **Done:** round 1 implementation (steps 0–11); **M0 on the real weights** (3/3 network tests,
   untrained latency, row-packing fix; see `notes.md`). 54 offline tests pass.
-- **In progress:** M1 data → M2 overfit + seed 0 → M3 eval (commands in `../README.md`, "Runbook").
+- **Done:** M1 data; Nano re-scored; M2 overfit.
+- **Blocked:** seed 0 learned only label priors. Head debugging in `notes.md` (2026-10-01
+  evening): pair head fixed in code (LayerNorm + linear path), needs a GPU check on
+  `data_dbg2/` before restarting seed 0. Code is public at github.com/shubham10divakar/microjev.
 - **Going public + paper:** `02_release_and_paper_plan.md` (release ladder R0/R1/R2, paper
   claims → tables, decisions D1–D5 waiting for the user).
 - **Read first:** `notes.md` and `00_aims.md` (Must / Target / kill criteria).

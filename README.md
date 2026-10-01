@@ -9,9 +9,12 @@ identical to asking it alone.
 - Aims and expectations: [`plan/00_aims.md`](plan/00_aims.md)
 - Plan / status: [`plan/01_implementation_plan.md`](plan/01_implementation_plan.md)
 - Working notes and deviations from the design: [`plan/notes.md`](plan/notes.md)
+- Release and paper plan: [`plan/02_release_and_paper_plan.md`](plan/02_release_and_paper_plan.md)
 
-**Status (2026-10-01): implemented, not trained.** All tests run on CPU with a tiny random
-ModernBERT; nothing has touched the real weights or datasets yet.
+**Status (2026-10-01): pre-release, not trained yet.** Offline tests run on CPU with a tiny
+random ModernBERT. On the real ModernBERT-base weights, packed decisions match separate ones to
+≤ 1e-4 (fp32), and one pass at k = 10 chunks is 5.7× faster than per-pair scoring with the same
+backbone (RTX 3060, untrained; `results/latency_untrained.json`).
 
 ## Layout
 
@@ -99,3 +102,7 @@ res["sufficient"]   # {option: p}
 res["custom_0"]     # {option: p}
 d.relevance(q, chunks); d.sufficient(q, chunks); d.grounded(claim, ctx); d.decide(question, options, state)
 ```
+
+## Licence
+
+Code: Apache-2.0 (`LICENSE`). Weights: licence set at the first release (see the release plan).

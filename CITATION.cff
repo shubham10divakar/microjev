@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use Micro-Jev, please cite it as below."
+title: "Micro-Jev: one-pass packed decision encoder for RAG control"
+type: software
+authors:
+  - family-names: Divakar
+    given-names: Subham
+    email: shubham.divakar@gmail.com
+    orcid: "https://orcid.org/0000-0003-0635-1058"
+license: Apache-2.0
+repository-code: "https://github.com/shubham10divakar/micro-jev"
+keywords: [rag, retrieval, calibration, decision-model, modernbert]

@@ -2,6 +2,44 @@
 
 Newest first. Decisions, deviations from the design doc, and things to check later.
 
+## 2026-10-02 — seed 0 (bilinear) trained and evaluated; B-pair started
+
+**Training** (`runs/micro-a-s0b`, 1,988 steps, 47 min; log in `results/micro-a-s0b/`):
+
+| dev NLL (uncalibrated) | init | ep 1 | ep 2 | ep 3 |
+|---|---|---|---|---|
+| grounded | 0.706 | 0.688 | 0.561 | 0.529 |
+| sufficient | 0.693 | 0.696 | 0.467 | 0.378 |
+| relevance | 1.121 | 1.065 | 0.510 | 0.465 |
+
+Epoch 1 was spent on the plateau; it escaped early in epoch 2. So only ~2 of 3 epochs did
+useful learning, on a decaying LR → undertrained.
+
+**Evaluation** (temperature per decision fitted on in-domain calib; Nano = v1.0 re-scored on
+the same rebuilt items):
+
+| | Micro s0 rel / suff / grd | Nano v1.0 rel / suff / grd |
+|---|---|---|
+| test acc | 0.796 / 0.805 / 0.768 | 0.815 / 0.846 / 0.848 |
+| held-out acc | 0.618 / **0.720** / 0.640 | 0.640 / 0.679 / 0.675 |
+| test ECE (cal) | 0.027 / 0.041 / 0.046 | 0.020 / 0.018 / 0.037 |
+| held-out ECE (cal) | **0.158 / 0.090 / 0.068** | 0.173 / 0.176 / 0.171 |
+
+- M-3 (in-domain ≥ Nano) **not met** yet: −2 / −4 / −8 pts. M-4 (ECE ≤ 0.03) met for relevance only.
+- Held-out **sufficient +4.1 pts** over Nano, and held-out calibration much better on all three
+  (ECE 0.07–0.16 vs 0.17). Held-out relevance / grounded still below Nano.
+- Grounded (MNLI → VitaminC) is the weakest: the isolation mask means the premise never sees
+  the claim (see 2026-10-01 evening).
+
+**B-pair started** (`runs/b-pair`, nano_jev trainer, ModernBERT-base, 3 epochs, lr 5e-5,
+batch 8, max_length 512 = Nano's setting; 1024 at batch 8 or 16 ran out of memory without
+gradient checkpointing). It learns immediately (loss 0.85 → 0.67 in 600 steps, no plateau):
+the plateau is specific to the packed / option-marker formulation. ~5.5 h for 3 epochs.
+
+**Next:** (1) evaluate B-pair → backbone vs packing; (2) fix the plateau so all epochs count:
+two-stage (full mask first, then block) or more epochs, and the 3-way controlled comparison
+on `data_dbg` (full + Nano format / full + markers / block + markers); (3) seeds 1–2.
+
 ## 2026-10-01 (night) — bilinear head; seed 0 restarted
 
 - The pair head + linear path still sat at chance on `data_dbg2` (MNLI + Hotpot, 2 epochs:

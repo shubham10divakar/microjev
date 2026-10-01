@@ -38,12 +38,24 @@ def summary(name, packs):
         print(f"    {n:<11} {lab:<3} {c}")
 
 
+def dedupe_nano(rows):
+    """Train minus-one-gold packs repeat (passage, label) relevance rows of their full pack;
+    the Nano-format view (B-pair training) keeps each distinct row once."""
+    seen, out = set(), []
+    for r in rows:
+        k = (r["decision"], r["question"], r["state"], r["label"])
+        if k not in seen:
+            seen.add(k)
+            out.append(r)
+    return out
+
+
 def write(out, splits: dict):
     for name, packs in splits.items():
         for p in packs:
             validate(p)
         write_jsonl(packs, f"{out}/{name}.jsonl")
-        write_jsonl([r for p in packs for r in to_nano_rows(p)], f"{out}/nano/{name}.jsonl")
+        write_jsonl(dedupe_nano(r for p in packs for r in to_nano_rows(p)), f"{out}/nano/{name}.jsonl")
         summary(name, packs)
 
 

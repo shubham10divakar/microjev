@@ -91,6 +91,12 @@ def query_header(query: str) -> str:
     return f"query: {query}"
 
 
+def text_state(text: str) -> dict:
+    """A free-text state (evidence, a Nano-style state, an HTTP request ...) as ONE segment with
+    an empty header. The header is capped at 256 tokens (§3.7); a segment gets the full budget."""
+    return make_state("", [("", text)])
+
+
 def validate(example: dict) -> None:
     """Raise ValueError if the example is malformed."""
     st = example.get("state")
@@ -134,13 +140,14 @@ def validate(example: dict) -> None:
 
 def from_nano_row(row: dict, idx: int = 0) -> dict:
     """Nano-Jev row {decision, question, options, state, label} -> packed example with one
-    global decision and header = state. The "unpacked" control on identical data (§3.2)."""
+    global decision; the state becomes one untitled segment (text_state, not the 256-token
+    header). The "unpacked" control on identical data (§3.2)."""
     name = row.get("decision") or "custom"
     spec = DECISIONS.get(name)
     return {
         "id": row.get("id", f"nano-{idx}"), "source": row.get("source", "nano"),
         "split": row.get("split", ""),
-        "state": make_state(row["state"]),
+        "state": text_state(row["state"]),
         "decisions": [{"name": name, "kind": spec.kind if spec else "choice", "scope": "global",
                        "question": row["question"], "options": list(row["options"]),
                        "label": row.get("label", IGNORE)}],

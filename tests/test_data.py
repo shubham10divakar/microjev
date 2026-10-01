@@ -105,3 +105,15 @@ def test_views():
     chunks = chunk_packs(full, 1, random.Random(0))
     assert len(chunks) == 3 and all(len(c["state"]["segments"]) == 1 for c in chunks)
     assert sorted(c["meta"]["orig_seg"][0] for c in chunks) == [0, 1, 2]
+
+
+def test_long_evidence_is_not_cut_to_header_cap(tok):
+    from jevcore.data.builders import grounded_pack
+    from jevcore.packing import HEADER_MAX, PackConfig, add_markers, render
+    M = add_markers(tok)
+    evidence = "penguins live in antarctica and cannot fly . " * 60     # ~ 480 tokens
+    p = grounded_pack("g", "test", evidence, "penguins cannot fly .", 0)
+    validate(p)
+    r = render(p, tok, M, PackConfig(max_len=2048))
+    assert not r.truncated and r.state_len > HEADER_MAX
+    assert to_nano_rows({**p, "meta": {"claim": "x"}})[0]["state"] == evidence

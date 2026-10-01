@@ -188,9 +188,9 @@ class Decider:
         return self.run(["sufficient"], query=query, passages=passages)["sufficient"]
 
     def grounded(self, claim: str, context: str) -> dict[str, float]:
-        return self.run(["grounded"], header=context, claim=claim)["grounded"]
+        return self.run(["grounded"], passages=[context], claim=claim)["grounded"]
 
     def decide(self, question: str, options: list[str], state: str,
                decision: str | None = None) -> dict[str, float]:
-        res = self.run([Q(question, options, name=decision or "custom_0")], header=state)
+        res = self.run([Q(question, options, name=decision or "custom_0")], passages=[state])
         return res[decision or "custom_0"]

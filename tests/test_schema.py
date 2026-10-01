@@ -37,7 +37,7 @@ def test_from_nano_row():
            "options": ["yes", "no"], "state": "some premise", "label": 1, "source": "mnli"}
     ex = from_nano_row(row)
     validate(ex)
-    assert ex["state"] == {"header": "some premise", "segments": []}
+    assert ex["state"] == {"header": "", "segments": [{"title": "", "text": "some premise"}]}
     assert ex["decisions"][0]["scope"] == "global"
     assert list(labeled_groups(ex)) == [("grounded", -1, 1)]
 

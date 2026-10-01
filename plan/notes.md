@@ -2,6 +2,26 @@
 
 Newest first. Decisions, deviations from the design doc, and things to check later.
 
+## 2026-10-01 (night) — bilinear head; seed 0 restarted
+
+- The pair head + linear path still sat at chance on `data_dbg2` (MNLI + Hotpot, 2 epochs:
+  macro dev NLL 0.829 → 0.811).
+- **Why option scoring plateaus.** With one shared scoring vector, logit(yes) − logit(no) can
+  only come from the *option tokens* carrying the decision differently, which a pretrained
+  encoder doesn't do. A normal classifier has a free weight vector per class instead. Escape
+  from this plateau is slow and random (same config, different settings: escape after ~100
+  steps or not within 2 epochs).
+- **Bilinear head** (`heads.BilinearScorer`, now the default; `pair` kept as an ablation):
+  `logit = w·LN(o) + (U·LN(a))·(V·LN(o))/√r`, r = 256. logit(yes) − logit(no) is then linear in
+  the anchor, like a classifier, but still scores any option wording, and `<ref>` anchors keep
+  relevance per chunk. MNLI debug, trainer, 2 epochs: dev 0.704 → 0.687 → **0.603** (pair: flat
+  0.693); without augmentation 0.695 → 0.597 → 0.570. Still slower than plain ModernBERT
+  (0.32 after 1 epoch), so watch the first epoch of the full run.
+- Micro-batches are now capped at `packs_per_step` rows, so the estimated 2,430 steps match the
+  real count and the LR schedule is right.
+- Seed 0 restarted as `runs/micro-a-s0b` (the old folder is locked on Windows; the failed
+  pair-head checkpoint is still in `runs/micro-a-s0`).
+
 ## 2026-10-01 (evening) — seed 0 did not learn; debugging the head
 
 **Symptom.** Phase-A seed 0, epoch 1 (446 steps): dev NLL 0.692 / 0.696 / 1.059 (grd / suff /

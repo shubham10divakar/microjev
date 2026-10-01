@@ -15,11 +15,13 @@ def autocast(device, enabled: bool = True):
 
 @torch.no_grad()
 def score_packs(model, tok, M, packs: list[dict], cfg: PackConfig, device,
-                tokens_per_batch: int = 16384, row_packing: bool = True, bf16: bool = True,
+                tokens_per_batch: int = 16384, row_packing: bool = False, bf16: bool = True,
                 timings: list | None = None) -> list[dict]:
     """Returns one dict per group:
         {pack, name, dec, seg, options, logits (1-D CPU float, length K), label}
     in no particular order. Packs that don't fit in cfg.max_len are skipped with a warning.
+    Row packing is off by default: SDPA with a dense mask computes the whole T x T score
+    matrix, so packs sharing an 8k row pay for each other's masked attention (~3x slower).
     If `timings` is a list, the forward time (s) of each batch is appended to it.
     """
     model.eval()

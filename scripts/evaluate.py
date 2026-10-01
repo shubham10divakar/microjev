@@ -52,7 +52,8 @@ def main():
     ap.add_argument("--k", type=int, help="k-sweep: split packs into chunks of k segments (relevance only)")
     ap.add_argument("--paraphrase", type=int, nargs=2, metavar=("Q", "O"),
                     help="held-out question / option wording index (-1 keeps the training form)")
-    ap.add_argument("--no-row-packing", action="store_true")
+    ap.add_argument("--row-packing", action="store_true",
+                    help="share rows between packs (slower under SDPA dense masks)")
     ap.add_argument("--save-preds", action="store_true")
     ap.add_argument("--no-save", action="store_true", help="don't write calibration files")
     ap.add_argument("--fp32", action="store_true")
@@ -65,7 +66,7 @@ def main():
     cfg.half_window = model.half_window
     score = lambda packs, timings=None: score_packs(  # noqa: E731
         model, tok, M, packs, cfg, device, args.tokens_per_batch,
-        row_packing=not args.no_row_packing, bf16=not args.fp32, timings=timings)
+        row_packing=args.row_packing, bf16=not args.fp32, timings=timings)
 
     calib_dir = Path(args.ood_calib or args.data)
     calib = split_by_name(score(transform(read_jsonl(calib_dir / "calib.jsonl"), args)))

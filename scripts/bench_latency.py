@@ -63,7 +63,7 @@ def timed(fn, device, runs, warmup):
 
 def micro_fn(d: Decider, packs, bf16):
     cfg = d.cfg
-    rows = make_rows([render(p, d.tok, d.M, cfg) for p in packs], cfg.max_len)
+    rows = make_rows([render(p, d.tok, d.M, cfg) for p in packs], cfg.max_len, row_packing=False)
     batches = [to_device(collate(b, d.tok.pad_token_id, cfg), d.device)
                for b in token_batches(rows, 10**9 if len(packs) == 1 else 65536)]
 

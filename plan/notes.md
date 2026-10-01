@@ -2,6 +2,36 @@
 
 Newest first. Decisions, deviations from the design doc, and things to check later.
 
+## 2026-10-01 — M0 on the real weights (GPU)
+
+- `MICROJEV_NETWORK_TESTS=1 pytest tests/test_network.py`: **3/3 pass.** Config matches §2
+  (22 layers, 768, 12 heads, 8192 positions, global every 3rd layer, window 128, vocab 50368;
+  markers fit in the spare vocab rows). Pretrained invariance probes ≤ 1e-4 fp32, SDPA and eager.
+- Untrained latency, RTX 3060, bf16, S10-style packs (150-token chunks), median of 200 after 20
+  warm-ups (`results/latency_untrained.json`):
+
+  | k | Micro 1 pass (ms) | Micro batch-32 (ms/pack) | B-pair (ms, pairs) | Nano v1.0 (ms) | B-pair / Micro |
+  |---|---|---|---|---|---|
+  | 1 | 22.2 | 5.0 | 44.3 (7) | 40.3 | 2.0× |
+  | 2 | 22.1 | 8.4 | 66.0 (10) | 41.7 | 3.0× |
+  | 5 | 27.9 | 19.6 | 141.0 (19) | 44.2 | 5.1× |
+  | 10 | 52.1 | 43.1 | 295.9 (34) | 58.2 | **5.7×** |
+  | 20 | 114.5 | 112.6 | 675.6 (64) | 85.3 | 5.9× |
+
+  M-2 (≥ 5× vs B-pair at k = 10) met on latency. Against Nano: faster up to k = 10, **slower at
+  k = 20** (114 vs 85 ms). Cause: dense-mask SDPA computes the full T × T matrix (k = 20 is
+  ~3.4k tokens), most of which the block mask throws away. Block-sparse attention
+  (FlexAttention, WSL2/Linux) is the fix to try; it is also a paper limitation to state.
+- **Row packing slowed inference ~3×.** The first run put 32 packs into shared 8k rows:
+  130.7 ms/pack at k = 10 vs 43.6 with one pack per row (same reason: dense T × T). Inference
+  (`score_packs`, `evaluate.py`, `bench_latency.py`) now defaults to one pack per row;
+  `evaluate.py --row-packing` turns it back on. Training keeps row packing at 2048 tokens for
+  now; measure both ways in M2 before the long run.
+- Fairness (paper): B-pair here runs padded batches through HF's masked path. Before the paper,
+  time B-pair on its fastest path too (no custom mask → unpadded / flash) and report both.
+- HF Hub warns about symlinks on Windows (cache works, uses more disk). Set
+  `HF_HUB_DISABLE_SYMLINKS_WARNING=1` or enable Developer Mode.
+
 ## 2026-10-01 — scripts, trainer, end-to-end smoke (steps 10–11)
 
 - **Marker learning rate (§4.5):** one embedding tensor can't sit in two AdamW groups, and

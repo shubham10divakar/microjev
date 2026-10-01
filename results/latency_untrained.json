@@ -1,0 +1,51 @@
+{
+  "device": "cuda",
+  "bf16": true,
+  "results": [
+    {
+      "k": 1,
+      "pack_tokens": 235,
+      "micro_ms": 22.207500000035907,
+      "micro_b32_ms_per_pack": 5.012584374998852,
+      "pair_ms": 44.25315000003138,
+      "pair_passes": 7,
+      "nano_ms": 40.34765000005791
+    },
+    {
+      "k": 2,
+      "pack_tokens": 390,
+      "micro_ms": 22.11269999986598,
+      "micro_b32_ms_per_pack": 8.381342187501417,
+      "pair_ms": 65.96674999991592,
+      "pair_passes": 10,
+      "nano_ms": 41.7459500000632
+    },
+    {
+      "k": 5,
+      "pack_tokens": 855,
+      "micro_ms": 27.85750000009557,
+      "micro_b32_ms_per_pack": 19.621857812499144,
+      "pair_ms": 140.95799999995506,
+      "pair_passes": 19,
+      "nano_ms": 44.19590000009066
+    },
+    {
+      "k": 10,
+      "pack_tokens": 1630,
+      "micro_ms": 52.077850000046055,
+      "micro_b32_ms_per_pack": 43.13222968750097,
+      "pair_ms": 295.89255000007597,
+      "pair_passes": 34,
+      "nano_ms": 58.17824999996901
+    },
+    {
+      "k": 20,
+      "pack_tokens": 3180,
+      "micro_ms": 114.52305000000251,
+      "micro_b32_ms_per_pack": 112.64286093750187,
+      "pair_ms": 675.57910000005,
+      "pair_passes": 64,
+      "nano_ms": 85.30855000003612
+    }
+  ]
+}

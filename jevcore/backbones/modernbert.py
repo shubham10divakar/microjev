@@ -16,7 +16,7 @@ HEAD_NAME = "head.pt"
 
 DEFAULT_MODEL_CFG = {"backbone": DEFAULT_BASE, "attn": "sdpa", "decision_global": True,
                      "option_mode": "isolated", "ref_view": "own", "readout": "marker",
-                     "head": "pair", "head_dropout": 0.1, "mask": "block",
+                     "head": "bilinear", "head_dropout": 0.1, "mask": "block",
                      "position_restart": True}
 
 

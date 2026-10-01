@@ -2,7 +2,7 @@ import torch
 from conftest import sample_example, tiny_model
 
 from jevcore.backbones.modernbert import MicroJev
-from jevcore.heads import INIT_STD
+from jevcore.heads import build_head
 from jevcore.packing import PackConfig
 from jevcore.scoring import score_packs
 from jevcore.trainer import TrainConfig, param_groups, train
@@ -35,9 +35,9 @@ def test_param_groups_split():
 
 def test_overfit_and_reload(tmp_path):
     model, tok, M = tiny_model()
-    # back to the real small-init last layer: training must start near uniform (NLL ~ log K)
-    torch.nn.init.normal_(model.head.mlp[-1].weight, std=INIT_STD)
-    torch.nn.init.zeros_(model.head.mlp[-1].bias)
+    # back to the real head init (conftest randomises it): training must start near uniform
+    torch.manual_seed(0)
+    model.head = build_head(model.cfg["head"], model.enc.config.hidden_size, model.cfg["head_dropout"])
     cfg = PackConfig(max_len=512, half_window=model.half_window)
     packs = _packs()
     tc = TrainConfig(lr_backbone=1e-3, lr_head=3e-3, epochs=60, packs_per_step=8,

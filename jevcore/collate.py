@@ -126,7 +126,7 @@ def render_all(examples: list[dict], tok, M, cfg: PackConfig, ids=None, warn=Tru
 def epoch_batches(examples: list[dict], tok, M, cfg: PackConfig, rng: random.Random,
                   tokens_per_batch: int, augment: Callable[[dict, random.Random], dict] | None = None,
                   mega: int = 512, row_packing: bool = True,
-                  with_spans: bool = False) -> Iterator[dict]:
+                  with_spans: bool = False, max_rows: int = 64) -> Iterator[dict]:
     """One training epoch: shuffle, augment, render and pack in mega-batches, bucket by length,
     shuffle the batches inside each mega-batch."""
     order = list(range(len(examples)))
@@ -136,7 +136,7 @@ def epoch_batches(examples: list[dict], tok, M, cfg: PackConfig, rng: random.Ran
         exs = [augment(examples[i], rng) if augment else examples[i] for i in chunk]
         rendered, kept = render_all(exs, tok, M, cfg, ids=chunk, warn=False)
         rows = make_rows(rendered, cfg.max_len, row_packing, ids=kept)
-        batches = token_batches(rows, tokens_per_batch)
+        batches = token_batches(rows, tokens_per_batch, max_rows)
         rng.shuffle(batches)
         for b in batches:
             yield collate(b, tok.pad_token_id, cfg, with_spans)

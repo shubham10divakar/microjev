@@ -37,6 +37,31 @@ class PairScorer(nn.Module):
         return (self.lin(no) + self.mlp(ha + ho + ha * ho)).squeeze(-1)
 
 
+class BilinearScorer(nn.Module):
+    """logit(anchor, option) = w·LN(o) + (U·LN(a)) · (V·LN(o)) / sqrt(r).
+
+    With shared weights, a pure option-token score needs the "yes" and "no" option tokens
+    themselves to carry the decision, which a pretrained encoder doesn't do: training sat at
+    log K. The bilinear term makes logit(yes) - logit(no) linear in the anchor, like an ordinary
+    classifier over the anchor, while still scoring arbitrary option wordings (notes, 2026-10-01).
+    """
+
+    def __init__(self, d: int, r: int = 256, p: float = 0.1):
+        super().__init__()
+        self.na, self.no = nn.LayerNorm(d), nn.LayerNorm(d)
+        self.drop = nn.Dropout(p)
+        self.u, self.v = nn.Linear(d, r), nn.Linear(d, r)
+        self.scale = r ** -0.5
+        self.lin = nn.Linear(d, 1)
+        nn.init.normal_(self.lin.weight, std=INIT_STD)
+        nn.init.zeros_(self.lin.bias)
+
+    def forward(self, a: torch.Tensor, o: torch.Tensor) -> torch.Tensor:  # a [G, d], o [G, K, d]
+        no = self.no(o)
+        ua = self.u(self.drop(self.na(a)))[:, None]                    # [G, 1, r]
+        return self.lin(no).squeeze(-1) + (ua * self.v(no)).sum(-1) * self.scale
+
+
 class LinearScorer(nn.Module):
     """Ablation A5: Nano-style linear(o); the anchor is ignored."""
 
@@ -54,6 +79,8 @@ class LinearScorer(nn.Module):
 def build_head(kind: str, d: int, p: float = 0.1) -> nn.Module:
     if kind == "pair":
         return PairScorer(d, p=p)
+    if kind == "bilinear":
+        return BilinearScorer(d, p=p)
     if kind == "linear":
         return LinearScorer(d, p=p)
     raise ValueError(f"unknown head {kind!r}")

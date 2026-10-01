@@ -119,7 +119,8 @@ def train(model, tok, M, train_packs: list[dict], dev_packs: list[dict], cfg: Pa
         parts_run: dict[str, float] = {}
         parts_n: dict[str, int] = {}
         for b in epoch_batches(train_packs, tok, M, cfg, rng, tc.tokens_per_microbatch,
-                               augment_fn, row_packing=row_packing, with_spans=with_spans):
+                               augment_fn, row_packing=row_packing, with_spans=with_spans,
+                               max_rows=tc.packs_per_step):
             n_packs = len(set(b["g_example"]))
             b = to_device(b, device)
             with autocast(device, tc.bf16):

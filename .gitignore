@@ -4,10 +4,10 @@ __pycache__/
 .venv/
 
 # Data, model outputs and results scratch (weights go to Hugging Face, not git)
-data*/
-runs/
-logs/
-dist/
+/data*/
+/runs/
+/logs/
+/dist/
 *.egg-info/
 .pytest_cache/
 

@@ -3,6 +3,22 @@
 Spec: [`../14_micro_jev_design.md`](../14_micro_jev_design.md) (§ numbers below refer to it).
 Aims: [`00_aims.md`](00_aims.md). Running log: [`notes.md`](notes.md).
 
+## ▶ Resume here (state at end of 2026-10-01)
+
+- **Done:** round 1, implementation only (steps 0–11 below). Last commit is "Fix test count in plan".
+  54 CPU tests pass (`python -m pytest tests -q` from the shared `code_repo/.venv`).
+- **Not done:** no training, no dataset download, no run on the real ModernBERT-base weights.
+  The GPU was busy, so it was not used.
+- **Start next session with:**
+  1. Check the GPU is free (ask the user).
+  2. M0: `MICROJEV_NETWORK_TESTS=1 python -m pytest tests/test_network.py -v`, then
+     `scripts/bench_latency.py --base answerdotai/ModernBERT-base --device cuda --k 1 2 5 10 20 --nano ../nano_jev/runs/nano-jev-v1.0`.
+  3. M1 data → M2 overfit + seed 0 → M3 eval (commands in `../README.md`, "Runbook").
+- **Read first:** `notes.md` (deviations from the design + "Things to watch when training starts")
+  and `00_aims.md` (Must / Target / kill criteria) to judge results.
+- **Rules:** commits list only the user as author (no Claude co-author); everything stays in
+  `microjev/`, own git repo; ask before using the GPU.
+
 **Scope of this round (2026-10-01): implement only.** GPU is busy: no training, no evaluation runs,
 no dataset downloads. Everything is tested on CPU with a tiny randomly initialised ModernBERT
 config, so the tests need no network.

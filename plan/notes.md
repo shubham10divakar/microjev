@@ -2,6 +2,41 @@
 
 Newest first. Decisions, deviations from the design doc, and things to check later.
 
+## 2026-10-01 — scripts, trainer, end-to-end smoke (steps 10–11)
+
+- **Marker learning rate (§4.5):** one embedding tensor can't sit in two AdamW groups, and
+  scaling gradients does nothing under Adam. So the markers get a separate zero-initialised
+  `marker_delta` parameter (lr_head, no decay) added through a forward hook on the token
+  embedding. `MicroJev.save` folds it into the embedding rows, so checkpoints are plain
+  ModernBERT + `head.pt`. Tested: save → load reproduces logits exactly.
+- **Free-text evidence goes in a segment, not the header** (deviation from §3.2 / §5.1
+  "header = premise"). The header is capped at 256 tokens (§3.7), which would have cut MNLI /
+  VitaminC evidence, `grounded(claim, ctx)`, `decide(..., state)` and Cyber-Jev HTTP requests.
+  `text_state()` = empty header + one untitled segment. Side benefit: grounded training now
+  looks like grounded-over-passages at inference (the off-distribution concern below is
+  smaller, though MNLI premises are still single short segments).
+- Trainer: micro-batches by token budget; gradients accumulated until ≥ `packs_per_step`
+  packs, each micro-batch's loss weighted by its pack count. Step count for the LR schedule
+  is estimated as ceil(n_train / packs_per_step) × epochs.
+- Overfit check on the tiny CPU model: dev NLL starts at exactly log K (zero-init head) and
+  drops below 0.1 on 8 packs. The real M2 check (200 packs, loss < 0.05) needs the GPU.
+- B-pair (A10) reuses nano_jev's own trainer on the Nano-format export (`data/nano/`), so the
+  control really is "Nano architecture, same items". The export is deduplicated. Note B-pair
+  sees all ~8 distractors per question every epoch; Micro samples k ~ U{0..8} (mean 4).
+- `custom` temperature: the mean of the builtin temperatures until a paraphrase-calib split
+  exists (§8 wants it fitted on the paraphrase-test calib half; not built yet).
+- Windows console (cp1252) can't print "→" / "Δ": every script reconfigures stdout to UTF-8.
+  The smoke test runs the scripts without PYTHONIOENCODING, so it would catch this again.
+- Smoke-tested `baselines.py nano` on CPU against the local `nano_jev/runs/nano-jev-v1.0`
+  weights with synthetic rows (plumbing only; numbers meaningless).
+- `tests/test_network.py` (opt-in) checks the §2 config table and runs the invariance probes
+  on real ModernBERT-base weights. This is M0 proper; not run yet (no downloads this round).
+
+Open items (not blocking training):
+- Phase B builders (2Wiki, FEVER): HF ids / licences unverified.
+- Paraphrase-test calib half for `T_custom`.
+- ONNX / CPU int8 export (latency stretch goal).
+
 ## 2026-10-01 — core implemented (steps 1–9), CPU tests only
 
 Verified against installed `transformers 5.17.0` source (`modeling_modernbert.py`):

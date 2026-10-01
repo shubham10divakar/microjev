@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "micro-jev"
+dynamic = ["version"]
+description = "One-pass packed decision encoder for RAG control: all chunk relevances, sufficiency and groundedness from one ModernBERT pass"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [{ name = "Subham" }]
+keywords = ["rag", "retrieval", "calibration", "decision-model", "jev", "modernbert"]
+dependencies = [
+    "torch>=2.1",
+    "transformers==5.17.0",
+    "huggingface_hub>=0.24",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+train = ["datasets>=3.0", "scikit-learn", "numpy", "tqdm"]
+test = ["pytest>=8"]
+
+[tool.hatch.version]
+path = "jevcore/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["jevcore", "microjev"]
+core-metadata-version = "2.4"
+
+[tool.hatch.build.targets.sdist]
+core-metadata-version = "2.4"
+include = ["jevcore", "microjev", "tests", "README.md", "pyproject.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["network: downloads real weights or datasets (set MICROJEV_NETWORK_TESTS=1)"]

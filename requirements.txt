@@ -1,0 +1,11 @@
+# Install PyTorch with CUDA first:
+#   uv pip install torch --index-url https://download.pytorch.org/whl/cu128
+torch>=2.5
+transformers==5.17.0   # pinned: the dict attention-mask API changed between 4.x and 5.x (design §2)
+datasets>=3.0
+huggingface_hub>=0.24
+numpy
+scikit-learn
+pyyaml
+tqdm
+pytest>=8

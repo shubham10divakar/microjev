@@ -1,0 +1,10 @@
+# Ablation A8: ModernBERT-large (~395M). Same recipe; halve the token budget if it does not fit.
+model: {backbone: answerdotai/ModernBERT-large, attn: sdpa, decision_global: true,
+        option_mode: isolated, ref_view: own, readout: marker, head: pair, head_dropout: 0.1,
+        mask: block, position_restart: true}
+data:  {phase: A, max_len_train: 2048, max_len_eval: 8192, row_packing: true,
+        aug: {shuffle: true, k_distractors: [0, 8], subset_p: 0.8, optperm: true, verb_p: 0.3, qpara_p: 0.3}}
+train: {lr_backbone: 5.0e-5, lr_head: 5.0e-4, wd: 0.01, betas: [0.9, 0.98], eps: 1.0e-6,
+        warmup: 0.06, epochs: 3, tokens_per_microbatch: 8192, packs_per_step: 32,
+        bf16: true, grad_ckpt: true, seed: 0, select_by: dev_nll}
+calib: {per_decision: true, ood_set: musique_train_500}

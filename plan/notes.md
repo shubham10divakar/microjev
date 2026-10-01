@@ -2,6 +2,36 @@
 
 Newest first. Decisions, deviations from the design doc, and things to check later.
 
+## 2026-10-01 — M1 data, Nano re-scored, M2 overfit, seed 0 started
+
+- **M1 data** (`prepare_packed.py`, log in `logs/m1_prepare.log`): train 25,920 packs
+  (139k labelled groups), calib 1,994, test 1,992; held-out 3,000 (MuSiQue + VitaminC);
+  OOD calib 1,000 MuSiQue-train packs; k-sweep 1,520 packs (21k groups). Train lengths:
+  p50 251, p95 1,147, p99 1,289, max 1,999 tokens → **0% truncated at 2048**, keep
+  `max_len_train: 2048`.
+- **Nano v1.0 re-scored on the rebuilt sets** (`results/baselines/`):
+
+  | | rel | suff | grd |
+  |---|---|---|---|
+  | test, rebuilt | 0.815 | 0.846 | 0.848 |
+  | test, v1.0 report | 0.815 | 0.845 | 0.844 |
+  | held-out, rebuilt | 0.640 | 0.679 | 0.675 |
+  | held-out, v1.0 report | 0.635 | 0.670 | 0.675 |
+
+  5 of 6 within ± 0.5 pt; held-out sufficient is +0.9. Checked: same questions, labels and
+  structure (3 paragraphs, 520/520), but **different distractor paragraphs** (only 7 / 1,040
+  states identical; relevance 3,158 / 4,655), because Nano's builder and ours draw distractors
+  through different RNG paths. 0.9 pt is within sampling noise (SE ≈ 1.4 pt at n = 1,040). All
+  paper comparisons use the rebuilt items for every system, so this does not bias them. The
+  paper should cite the rebuilt Nano numbers, not the v1.0 report.
+- **M2 overfit (200 packs, 30 epochs, constant LR):** train loss 0.022 at step 200 (< 0.05 ✔),
+  best dev NLL 0.009. Grounded and sufficient fit by epoch ~13; **relevance sat at ~0.55–0.6
+  for ~15 epochs before dropping** — consistent with the "option markers start identical"
+  warning. It did break through, so no A4 switch yet; watch relevance in the full run.
+- **Row packing off for training too.** 40-step test on the full data: 3.4 s/step with row
+  packing vs 2.3 s/step without (~1.5× faster). `configs/*.yaml` now set `row_packing: false`.
+  Seed 0 at ~810 steps/epoch × 3 epochs ≈ 1.5–2 h on the 3060.
+
 ## 2026-10-01 — M0 on the real weights (GPU)
 
 - `MICROJEV_NETWORK_TESTS=1 pytest tests/test_network.py`: **3/3 pass.** Config matches §2

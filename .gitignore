@@ -6,6 +6,7 @@ __pycache__/
 # Data, model outputs and results scratch (weights go to Hugging Face, not git)
 data*/
 runs/
+logs/
 dist/
 *.egg-info/
 .pytest_cache/

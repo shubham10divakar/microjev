@@ -42,7 +42,7 @@ microjev/
 | 10 | Scripts: prepare_packed, train (incl. `--overfit N`), evaluate, invariance, bench_latency, baselines (B-pair, B-k1) | §5, §6 | done |
 | 11 | README with how-to-run for M0–M3; update notes | — | done |
 
-**Round 1 result (2026-10-01):** steps 0–11 done, 54 offline tests (53 run, 1 file opt-in network).
+**Round 1 result (2026-10-01):** steps 0–11 done; 54 offline tests pass on CPU, 3 opt-in network tests (M0 on real weights) skipped.
 No training, no downloads, GPU untouched.
 
 ## Next (needs GPU / network; not this round), in order

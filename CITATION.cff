@@ -8,5 +8,5 @@ authors:
     email: shubham.divakar@gmail.com
     orcid: "https://orcid.org/0000-0003-0635-1058"
 license: Apache-2.0
-repository-code: "https://github.com/shubham10divakar/micro-jev"
+repository-code: "https://github.com/shubham10divakar/microjev"
 keywords: [rag, retrieval, calibration, decision-model, modernbert]

@@ -18,13 +18,14 @@ when, what the paper needs, and who does what.
 - Found and fixed: row packing (several packs per 8k row) made batched inference ~3× slower,
   because SDPA with a dense mask computes the full T × T matrix. Inference now uses one pack
   per row. Training (2048-token rows) is measured in M2.
-- Names are free: PyPI `micro-jev`, GitHub `shubham10divakar/micro-jev`, HF `sdmlai/micro-jev`.
+- Names: GitHub **`shubham10divakar/microjev`** (created by the user, pushed 2026-10-01);
+  PyPI `micro-jev` and HF `sdmlai/micro-jev` were free on 2026-10-01.
 
 ## 2. Release ladder (what goes public when)
 
 | Stage | When | What goes public | Gate |
 |---|---|---|---|
-| **R0 — open code** | now (your call, §6) | GitHub repo: code, design doc, plan, tests, M0 results. README says "pre-release, untrained" | Tests green in CI; no personal paths; LICENSE |
+| **R0 — open code** | **done 2026-10-01** | GitHub repo: code, design doc, plan, tests, M0 results. README says "pre-release, untrained" | Tests green in CI; no personal paths; LICENSE |
 | **R1 — v0.1 + preprint** | after M3 (3 seeds) + M4 core ablations | HF `sdmlai/micro-jev` tag `v0.1` + model card; PyPI `micro-jev 0.1.0`; GitHub release; **arXiv v1** | All "Must" aims met or honestly reported; card has held-out + OOD calibration |
 | **R2 — v0.2 + submission** | after M5 (phase B, maybe C) | HF `v0.2`, PyPI 0.2, arXiv v2, venue submission | Phase-B licences checked (FEVER, 2Wiki) |
 
@@ -36,12 +37,12 @@ private until the preprint, skip R0 and do R0 + R1 together.** Either is fine.
 ### R0 checklist
 
 - [x] `LICENSE` (Apache-2.0, same as nano-jev) and licence line in README / `pyproject.toml`
-- [ ] `pyproject.toml`: name `micro-jev`, version `0.0.1.dev0`, authors, URLs, classifiers
+- [x] `pyproject.toml`: name `micro-jev`, authors, URLs, classifiers (version bumps at R1)
 - [x] GitHub Actions (`.github/workflows/tests.yml`): `pytest tests -q` on CPU (Linux, Python 3.12, transformers 5.17.0 pinned)
-- [ ] README: status badge-free "pre-release" banner, link to Nano-Jev, citation placeholder
+- [x] README: status badge-free "pre-release" banner, link to Nano-Jev, citation placeholder
 - [x] Grep for absolute Windows paths (none found) / `../nano_jev` assumptions; document them as optional
 - [x] `CITATION.cff` (software citation; add co-authors per D3)
-- [ ] Create repo `shubham10divakar/micro-jev` (public), push `main`
+- [x] Repo `shubham10divakar/microjev`, `main` pushed
 
 ### R1 checklist
 
@@ -145,15 +146,15 @@ row-packing note.
 5. **R1**: weights, card, PyPI, arXiv v1.
 6. M5 phase B → R2.
 
-## 6. Decisions for you
+## 6. Decisions (made 2026-10-01; the user said "choose what's best")
 
-| # | Decision | Recommendation |
-|---|---|---|
-| D1 | Open the code now (R0) or with the preprint? | Now |
-| D2 | Weights licence | MIT, same as Nano (re-check share-alike) |
-| D3 | Paper authorship / affiliation, same as Nano paper? | — |
-| D4 | Target venue after arXiv | IR venue; decide after M3 numbers |
-| D5 | arXiv endorsement for cs.CL | Needed only if you have no prior cs.CL submission |
+| # | Decision | Choice | Why |
+|---|---|---|---|
+| D1 | Open the code now? | **Yes, done** (`shubham10divakar/microjev`) | Timestamp + same path as Nano-Jev |
+| D2 | Weights licence | **MIT**, as Nano v1.0 | Same phase-A data as Nano v1.0; re-check if phase-B (FEVER) data is added |
+| D3 | Paper authors | **Same as the Nano-Jev paper** (Divakar, Priyadarshini; CGU) | Continuity; user to confirm with co-author before arXiv |
+| D4 | Venue after arXiv | **Decide after M3**; lean IR (SIGIR short / CIKM / ECIR) | Fit with RAG control + reranking |
+| D5 | arXiv endorsement | Check at R1 | Only needed without a prior cs.CL submission |
 
 ## 7. What only you can do
 

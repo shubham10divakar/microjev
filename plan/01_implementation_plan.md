@@ -17,7 +17,7 @@ microjev/
     schema.py templates.yaml packing.py collate.py heads.py
     backbones/modernbert.py
     data/builders.py data/augment.py
-    calibration.py report.py registry.py decider.py
+    loss.py calibration.py report.py registry.py scoring.py decider.py
   microjev/__init__.py     thin public API: microjev.load(), microjev.Q
   scripts/                 prepare_packed.py train.py evaluate.py bench_latency.py invariance.py baselines.py
   tests/                   test_schema.py test_packing.py test_mask_invariance.py test_collate.py test_decider.py ...
@@ -29,15 +29,15 @@ microjev/
 | # | Step | Design § | Status |
 |---|---|---|---|
 | 0 | git init, exclude from outer repo, aims + plan + notes | §9 | done |
-| 1 | Scaffold: pyproject (pin transformers 5.17.0), .gitignore, README stub, configs | §2, App. A | todo |
-| 2 | `schema.py`: dataclasses, builtin decisions, `validate()`, Nano-row adapter; `templates.yaml` | §3.1–3.2, §5.2 | todo |
-| 3 | `packing.py`: markers, `Row`, `Group`, `truncate_state`, `render`, `allowed`, `local_from_global`, multi-example rows | §3.3–3.8, §5.5 | todo |
-| 4 | `heads.py` (PairScorer + linear ablation) and `backbones/modernbert.py` (MicroJev, marker init) | §3.3, §4 | todo |
-| 5 | `collate.py`: bucketing, row packing, group flattening, batch masks | §5.5 | todo |
-| 6 | Tests: schema, packing, collate, **mask invariance on random weights** (CPU, tiny config) | §6.4, M0 | todo |
-| 7 | `data/augment.py` + `data/builders.py` (hotpot / squad2 / mnli / musique / vitaminc → packs; Nano-row export for re-scoring) | §5.1–5.2 | todo |
-| 8 | Loss + `calibration.py` / `report.py` (copied from nano, + AUROC, QWK, AURC, risk–coverage) | §5.3, §5.6, §6.2 | todo |
-| 9 | `decider.py` + `microjev` API (run, Nano-compatible wrappers, split passes, temperatures, OOD flag) | §8 | todo |
+| 1 | Scaffold: pyproject (pin transformers 5.17.0), .gitignore, README stub, configs | §2, App. A | done |
+| 2 | `schema.py`: dataclasses, builtin decisions, `validate()`, Nano-row adapter; `templates.yaml` | §3.1–3.2, §5.2 | done |
+| 3 | `packing.py`: markers, `Row`, `Group`, `truncate_state`, `render`, `allowed`, `local_from_global`, multi-example rows | §3.3–3.8, §5.5 | done |
+| 4 | `heads.py` (PairScorer + linear ablation) and `backbones/modernbert.py` (MicroJev, marker init) | §3.3, §4 | done |
+| 5 | `collate.py`: bucketing, row packing, group flattening, batch masks | §5.5 | done |
+| 6 | Tests: schema, packing, collate, **mask invariance on random weights** (CPU, tiny config) | §6.4, M0 | done |
+| 7 | `data/augment.py` + `data/builders.py` (hotpot / squad2 / mnli / musique / vitaminc → packs; Nano-row export for re-scoring) | §5.1–5.2 | done |
+| 8 | Loss + `calibration.py` / `report.py` (copied from nano, + AUROC, QWK, AURC, risk–coverage) | §5.3, §5.6, §6.2 | done |
+| 9 | `decider.py` + `microjev` API (run, Nano-compatible wrappers, split passes, temperatures, OOD flag) | §8 | done |
 | 10 | Scripts: prepare_packed, train (incl. `--overfit N`), evaluate, invariance, bench_latency, baselines (B-pair, B-k1) | §5, §6 | todo |
 | 11 | README with how-to-run for M0–M3; update notes | — | todo |
 
